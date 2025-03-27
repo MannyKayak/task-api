@@ -11,6 +11,10 @@ const {
   deleteTask,
 } = require("../controllers/tasksController");
 
+const authMiddleware = require('../middleware/auth');
+
+router.use(authMiddleware); // apply auth middleware to all routes under /tasks
+
 router.get("/", getTasks);
 router.post("/", createTask);
 router.put("/:id", updateTask);
