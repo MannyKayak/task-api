@@ -1,11 +1,16 @@
 require("dotenv").config();
 const express = require("express");
 const connectDB = require("./config/db");
+const cors = require("cors");
 
 const app = express();
 const taskRouter = require("./routes/tasks"); // import the tasks route from /routes/tasks.js
 const authRoutes = require("./routes/auth");
-
+app.use(
+  cors({
+    origin: "http://localhost:5173",
+  })
+);
 // Middleware to parse JSON request bodies
 app.use(express.json());
 // inject the tasks route this means that all the .get, .post... stuff is managed in the file tasks.js

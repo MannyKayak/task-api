@@ -32,7 +32,10 @@ const createTask = async (req, res) => {
     //     title,
     //     completed: false,
     //   };
-    const newTask = new Task({ title });
+    const newTask = new Task({
+      title: req.body.title,
+      user: req.user.id,
+    });
     await newTask.save();
     //   tasks.push(newTask);
     res.status(200).json(newTask);
