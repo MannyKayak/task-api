@@ -1,7 +1,6 @@
 // in this file I'm writing all the utility functions that I need to complete the operations of my application, like adding tasks or showing them...
 
 // import data from data/tasks
-const tasks = require("../data/tasks");
 const Task = require("../models/Task");
 
 // function to get all the tasks as a json object
@@ -9,44 +8,55 @@ const Task = require("../models/Task");
 //   res.json(tasks);
 // };
 // getTasks with Mongoose
-const getTasks = async (req, res) => {
+const getTasks = async (req, res, next) => {
   try {
-    const tasks = await Task.find();
+    const tasks = await Task.find({
+      user: req.user.userId,
+    }).populate("user", "email role");
+
     res.json(tasks);
   } catch (err) {
-    res
-      .status(500)
-      .json({ error: err.message, message: "Errore nel recupero dei task" });
+    next(err);
   }
 };
 
+const getAllTasks = async (req, res, next) => {
+  try {
+    const tasks = await Task.find().populate("user", "email");
+    res.json(tasks);
+  } catch (err) {
+    next(err);
+  }
+};
 // function to create a new task
-const createTask = async (req, res) => {
+const createTask = async (req, res, next) => {
+  console.log("Utente proveniente dal middleware", req.user);
   try {
     const { title } = req.body;
     if (!title) {
-      return res.status(400).json({ error: "Title is required" });
+      const err = new Error("Title is required");
+      res.status(400);
+      next(err);
     }
     //   const newTask = {
     //     id: tasks.length + 1,
     //     title,
     //     completed: false,
     //   };
+
     const newTask = new Task({
       title: req.body.title,
-      user: req.user.id,
+      user: req.user.userId,
     });
     await newTask.save();
     //   tasks.push(newTask);
     res.status(200).json(newTask);
   } catch (err) {
-    res
-      .status(500)
-      .json({ message: "Errore nella creazione del task", error: err.message });
+    next(err);
   }
 };
 
-const updateTask = async (req, res) => {
+const updateTask = async (req, res, next) => {
   //   // get the right task to modify --> get the id of the task
   //   const taskToUpdate = tasks.find(
   //     (task) => task.id === parseInt(req.params.id)
@@ -66,9 +76,16 @@ const updateTask = async (req, res) => {
       runValidators: true,
     });
 
+    if (task.user.toString() !== req.user.userId) {
+      const err = new Error("YOu don't have the required permissions");
+      err.status = 403;
+      next(err);
+    }
+
     if (!task) return res.status(404).json({ error: "Task not found" });
     res.json(task);
   } catch (e) {
+    next(e);
     res.status(500).json({
       error: e.message,
       message: "Errore durante l'aggiornamento del task",
@@ -76,7 +93,7 @@ const updateTask = async (req, res) => {
   }
 };
 
-const deleteTask = async (req, res) => {
+const deleteTask = async (req, res, next) => {
   //   // get the right task to delete --> get the id of the task
   //   const index = tasks.findIndex((t) => t.id === parseInt(req.params.id));
   //   if (index === -1) {
@@ -91,11 +108,8 @@ const deleteTask = async (req, res) => {
     if (!task) return res.status(404).json({ error: "Task not found" });
     res.json(task);
   } catch (e) {
-    res.status(500).json({
-      error: e.message,
-      message: "Errore durante la cancellazione del task",
-    });
+    next(e);
   }
 };
 
-module.exports = { getTasks, createTask, updateTask, deleteTask };
+module.exports = { getTasks, createTask, updateTask, deleteTask, getAllTasks };

@@ -13,6 +13,12 @@ const UserSchema = new mongoose.Schema({
     required: [true, "Password Obbligatoria"],
     minlength: 6,
   },
+  role: {
+    type: String,
+    enum: ["user", "admin"],
+    default: "user",
+    required: true,
+  },
 });
 
 // password being crypted before saving

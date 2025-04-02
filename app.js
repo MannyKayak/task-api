@@ -6,6 +6,8 @@ const cors = require("cors");
 const app = express();
 const taskRouter = require("./routes/tasks"); // import the tasks route from /routes/tasks.js
 const authRoutes = require("./routes/auth");
+const errorHandler = require("./middleware/errorHandler");
+
 app.use(
   cors({
     origin: "http://localhost:5173",
@@ -17,7 +19,7 @@ app.use(express.json());
 // post --> send info to server
 app.use("/tasks", taskRouter);
 app.use("/auth", authRoutes);
-
+app.use(errorHandler);
 connectDB();
 
 // Start server
